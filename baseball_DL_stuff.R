@@ -177,7 +177,7 @@ upcoming_dl_1 <- cbind(upcoming_dl_1, seq_mean_df)
 
 # there is a lot of missing stuff so you will get NaN and NA's throughout but I think we can work with it
 
-tapply(upcoming_dl_1$SS_FF_mean, list(upcoming_dl_1$main_pitch_type, upcoming_dl_1$inj_cat), mean)
+tapply(upcoming_dl_1$x0_FF_mean, list(upcoming_dl_1$main_pitch_type, upcoming_dl_1$inj_cat), mean, na.rm = TRUE)
 
 
 
