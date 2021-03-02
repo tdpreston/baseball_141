@@ -7,6 +7,18 @@
 
 main_data <- read.csv("baseball_main_data.csv")
 
+
+load("built_pitcherDate_DL_data.RData")
+
+load("compiled_pitcherGame.RData")
+
+load("compiled_DL.RData")
+
+
+# you need this variable in main_data, future date of next DL
+
+main_data$fut_DL_1 <- as.Date(substr(xfullmx_XY_xtra[, 4], 1, 8), "%Y%m%d")
+
 # ------------------------------
 # high frequency pitchers
 # ------------------------------
@@ -78,6 +90,23 @@ for(i in seq_len(length(hi_freq_p))) {
 
 upcoming_dl_1 <- upcoming_dl_1[-1, ]
 
+
+#### new, get last game pitcher pitched before going on DL
+
+new_dl <- upcoming_dl_1[1, ]
+
+for(i in seq_len(nrow(upcoming_dl_1))) {
+  new_dl[i, ] <- main_data %>% 
+    filter(name == upcoming_dl_1$name[i]) %>% 
+    filter(timestamp <= upcoming_dl_1$fut_DL_1[i]) %>% 
+    arrange(desc(timestamp)) %>% 
+    head(1)
+}
+
+# replace upcoming DL with this
+
+upcoming_dl_1 <- new_dl
+
 # Find the main pitch for each pitcher
 
 main_pitch_type <- character(nrow(upcoming_dl_1))
@@ -97,15 +126,15 @@ sort(table(main_pitch_type), decreasing = TRUE) / length(main_pitch_type)
 
 main_pitch_type[which(main_pitch_type == "c_FF")] <- "Fastball"
 main_pitch_type[which(main_pitch_type == "c_FT")] <- "Fastball"
-main_pitch_type[which(main_pitch_type == "c_SI")] <- "Sinker"
-main_pitch_type[which(main_pitch_type == "c_SL")] <- "Slider"
+main_pitch_type[which(main_pitch_type == "c_SI")] <- "Fastball"
+main_pitch_type[which(main_pitch_type == "c_SL")] <- "Offspeed"
 
 main_pitch_type[which(main_pitch_type == "c_NA")] <- "Other"
-main_pitch_type[which(main_pitch_type == "c_KC")] <- "Other"
-main_pitch_type[which(main_pitch_type == "c_FS")] <- "Other"
-main_pitch_type[which(main_pitch_type == "c_FC")] <- "Other"
-main_pitch_type[which(main_pitch_type == "c_CU")] <- "Other"
-main_pitch_type[which(main_pitch_type == "c_CH")] <- "Other"
+main_pitch_type[which(main_pitch_type == "c_KC")] <- "Offspeed"
+main_pitch_type[which(main_pitch_type == "c_FS")] <- "Fastball"
+main_pitch_type[which(main_pitch_type == "c_FC")] <- "Fastball"
+main_pitch_type[which(main_pitch_type == "c_CU")] <- "Offspeed"
+main_pitch_type[which(main_pitch_type == "c_CH")] <- "Offspeed"
 
 
 
@@ -113,7 +142,10 @@ table(main_pitch_type)
 
 upcoming_dl_1$main_pitch_type <- main_pitch_type
 
+# get rid of NA pitchers
 
+upcoming_dl_1 <- upcoming_dl_1 %>% 
+  filter(main_pitch_type != "Other")
 
 # assign average pitch count category
 
@@ -133,6 +165,12 @@ tapply(upcoming_dl_1$ageYrs, list(upcoming_dl_1$main_pitch_type, upcoming_dl_1$p
 
 inj_type_vector <- c("shoulder", "elbow", "forearm", "back")
 
+# inj_type_vector <- c("shoulder", "elbow")
+
+
+# inj_type_vector <- c("strain")
+
+
 upcoming_dl_1$inj_cat <- ""
 
 for(i in seq_len(length(inj_type_vector))) {
@@ -141,8 +179,14 @@ for(i in seq_len(length(inj_type_vector))) {
 
 upcoming_dl_1$inj_cat[which(upcoming_dl_1$inj_cat == "")] <- "other"
 
+table(upcoming_dl_1$inj_cat)
+
+
+# quick chi-squared test
+
 table(upcoming_dl_1$inj_cat, upcoming_dl_1$main_pitch_type)
 
+chisq.test(table(upcoming_dl_1$inj_cat, upcoming_dl_1$main_pitch_type))
 
 # ------------------------------
 # Average data for z0, x0 and SS
@@ -153,7 +197,7 @@ table(upcoming_dl_1$inj_cat, upcoming_dl_1$main_pitch_type)
 
 dl_names <- upcoming_dl_1$name
 
-dl_timestamp <- upcoming_dl_1$timestamp
+dl_timestamp <- upcoming_dl_1$fut_DL_1
 
 seq_mean_df <- as.data.frame(matrix(0, nrow = nrow(upcoming_dl_1), ncol = length(83:145)))
 
@@ -177,7 +221,95 @@ upcoming_dl_1 <- cbind(upcoming_dl_1, seq_mean_df)
 
 # there is a lot of missing stuff so you will get NaN and NA's throughout but I think we can work with it
 
-tapply(upcoming_dl_1$x0_FF_mean, list(upcoming_dl_1$main_pitch_type, upcoming_dl_1$inj_cat), mean, na.rm = TRUE)
+tapply(upcoming_dl_1$cPitch, list(upcoming_dl_1$main_pitch_type, upcoming_dl_1$inj_cat), mean, na.rm = TRUE)
+
+
+# some new variables 
+
+# for fastball pitches
+
+upcoming_dl_1$p_h_diff_z0_FF <-  (upcoming_dl_1$z0_FF_mean * 12)  - upcoming_dl_1$heightInches
+
+upcoming_dl_1$p_h_diff_z0_FT <- (upcoming_dl_1$z0_FT_mean * 12) - upcoming_dl_1$heightInches
+
+upcoming_dl_1$p_h_diff_z0_SI <- (upcoming_dl_1$z0_SI_mean * 12) - upcoming_dl_1$heightInches
+
+upcoming_dl_1$p_h_diff_z0_FC <- (upcoming_dl_1$z0_FC_mean * 12) - upcoming_dl_1$heightInches
+
+upcoming_dl_1$p_h_diff_z0_FS <- (upcoming_dl_1$z0_FS_mean * 12) - upcoming_dl_1$heightInches
+
+# mean release of fastball pitches
+
+upcoming_dl_1$mean_release_fastball <- apply(upcoming_dl_1[, 213:217], 1, mean, na.rm = TRUE)
+
+# mean velocity of fastball pitches
+
+upcoming_dl_1$mean_velocity_fastball <- apply(upcoming_dl_1[, c(194, 196, 199, 200, 198)], 1, mean, na.rm = TRUE)
+
+colnames(upcoming_dl_1)
+
+# 154, 156, 152, 158, 157
+
+upcoming_dl_1$mean_x0_fastball <- apply(upcoming_dl_1[, c(154, 156, 152, 158, 157)], 1, mean, na.rm = TRUE)
+
+
+# ------------------------------
+# Basic tests
+# ------------------------------
+
+# There aren't enough offspeed dominant pitchers so it wouldn't really
+# make sense to include them so I am just going to filter by Fastball
+
+table(upcoming_dl_1$main_pitch_type)
+
+sub_df <- upcoming_dl_1 %>% 
+  filter(main_pitch_type == "Fastball")
+
+# Is there a difference between release points and injury types?
+
+baseball.aov <- aov(mean_release_fastball ~ inj_cat, data = sub_df)
+
+summary(baseball.aov)
+
+
+# Do low volume pitchers have different injuries than high volume pitchers?
+
+table(sub_df$pitch_count_cat, sub_df$inj_cat)
+
+chisq.test(table(sub_df$pitch_count_cat, sub_df$inj_cat))
+
+
+# random forest
+
+library(randomForest)
+
+library(caret)
+
+colnames(upcoming_dl_1)
+
+
+# 14, 16, 17, 37, 81, 149, 147, 148, 218:220
+
+rf_data <- upcoming_dl_1 %>% 
+  select(c(149, 14, 16, 17, 37, 81, 147, 148, 218:220))
+
+nrow(na.omit(rf_data))
+
+rf_data <- na.omit(rf_data)
+
+nrow(rf_data)
+
+trainids <- createDataPartition(rf_data$inj_cat, p = .75)
+
+baseball.rf <- randomForest(factor(inj_cat) ~ ., data = rf_data, subset = trainids$Resample1,
+                            mtry = 4, ntrees = 1000)
+
+baseball.rf.predict <- predict(baseball.rf, rf_data[-trainids$Resample1, ])
+
+# this thing sucks but it makes sense
+
+table(rf_data$inj_cat[-trainids$Resample1], baseball.rf.predict)
+
 
 
 
