@@ -246,7 +246,7 @@ upcoming_dl_1$mean_release_fastball <- apply(upcoming_dl_1[, 213:217], 1, mean, 
 
 upcoming_dl_1$mean_velocity_fastball <- apply(upcoming_dl_1[, c(194, 196, 199, 200, 198)], 1, mean, na.rm = TRUE)
 
-colnames(upcoming_dl_1)
+# mean whatever x0 is
 
 # 154, 156, 152, 158, 157
 
@@ -284,9 +284,6 @@ chisq.test(table(sub_df$pitch_count_cat, sub_df$inj_cat))
 library(randomForest)
 
 library(caret)
-
-colnames(upcoming_dl_1)
-
 
 # 14, 16, 17, 37, 81, 149, 147, 148, 218:220
 
