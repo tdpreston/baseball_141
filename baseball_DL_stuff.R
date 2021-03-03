@@ -107,6 +107,10 @@ for(i in seq_len(nrow(upcoming_dl_1))) {
 
 upcoming_dl_1 <- new_dl
 
+# don't need this anymore
+
+rm(new_dl)
+
 # Find the main pitch for each pitcher
 
 main_pitch_type <- character(nrow(upcoming_dl_1))
@@ -162,11 +166,15 @@ tapply(upcoming_dl_1$ageYrs, list(upcoming_dl_1$main_pitch_type, upcoming_dl_1$p
 # injury categories
 # ------------------------------
 
+# if you want to experiment with categories here is a table of injuries
+# adjust the vector length if you want to see more [1:25]
 
-inj_type_vector <- c("shoulder", "elbow", "forearm", "back")
+sort(table(tolower(unlist(str_split(str_remove_all(upcoming_dl_1$yn14_why, "[.]"), " ")))), decreasing = TRUE)[1:25]
+
+
+inj_type_vector <- c("shoulder", "elbow", "forearm", "back", "finger", "oblique", "hamstring", "knee")
 
 # inj_type_vector <- c("shoulder", "elbow")
-
 
 # inj_type_vector <- c("strain")
 
@@ -188,70 +196,120 @@ table(upcoming_dl_1$inj_cat, upcoming_dl_1$main_pitch_type)
 
 chisq.test(table(upcoming_dl_1$inj_cat, upcoming_dl_1$main_pitch_type))
 
+
+
+
+# this is old but I am going to leave it for reference, just scroll to the end of this old section
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 # ------------------------------
 # Average data for z0, x0 and SS
 # ------------------------------
 
+
+
 # here we are going to get some summary stats between a certain date for each pitcher
 
 
-dl_names <- upcoming_dl_1$name
-
-dl_timestamp <- upcoming_dl_1$fut_DL_1
-
-seq_mean_df <- as.data.frame(matrix(0, nrow = nrow(upcoming_dl_1), ncol = length(83:145)))
-
-colnames(seq_mean_df) <- paste(colnames(main_data)[83:145], "_mean", sep="")
-
-for(i in seq_len(length(dl_names))) {
-  seq_mean_df[i, ] <- main_data %>% 
-    filter(name == dl_names[i]) %>% 
-    filter(timestamp <= dl_timestamp[i]) %>% 
-    select(83:145) %>% 
-    colMeans(na.rm = TRUE) %>% 
-    as.numeric()
-}
-
-head(seq_mean_df)
+# dl_names <- upcoming_dl_1$name
+# 
+# dl_timestamp <- upcoming_dl_1$fut_DL_1
+# 
+# seq_mean_df <- as.data.frame(matrix(0, nrow = nrow(upcoming_dl_1), ncol = length(83:145)))
+# 
+# colnames(seq_mean_df) <- paste(colnames(main_data)[83:145], "_mean", sep="")
+# 
+# for(i in seq_len(length(dl_names))) {
+#   seq_mean_df[i, ] <- main_data %>% 
+#     filter(name == dl_names[i]) %>% 
+#     filter(timestamp <= dl_timestamp[i]) %>% 
+#     select(83:145) %>% 
+#     colMeans(na.rm = TRUE) %>% 
+#     as.numeric()
+# }
+# 
+# head(seq_mean_df)
 
 # add this stuff to upcoming_dl_1
 
-upcoming_dl_1 <- cbind(upcoming_dl_1, seq_mean_df)
+# upcoming_dl_1 <- cbind(upcoming_dl_1, seq_mean_df)
 
 
 # there is a lot of missing stuff so you will get NaN and NA's throughout but I think we can work with it
 
-tapply(upcoming_dl_1$cPitch, list(upcoming_dl_1$main_pitch_type, upcoming_dl_1$inj_cat), mean, na.rm = TRUE)
+# tapply(upcoming_dl_1$cPitch, list(upcoming_dl_1$main_pitch_type, upcoming_dl_1$inj_cat), mean, na.rm = TRUE)
 
 
 # some new variables 
 
 # for fastball pitches
 
-upcoming_dl_1$p_h_diff_z0_FF <-  (upcoming_dl_1$z0_FF_mean * 12)  - upcoming_dl_1$heightInches
-
-upcoming_dl_1$p_h_diff_z0_FT <- (upcoming_dl_1$z0_FT_mean * 12) - upcoming_dl_1$heightInches
-
-upcoming_dl_1$p_h_diff_z0_SI <- (upcoming_dl_1$z0_SI_mean * 12) - upcoming_dl_1$heightInches
-
-upcoming_dl_1$p_h_diff_z0_FC <- (upcoming_dl_1$z0_FC_mean * 12) - upcoming_dl_1$heightInches
-
-upcoming_dl_1$p_h_diff_z0_FS <- (upcoming_dl_1$z0_FS_mean * 12) - upcoming_dl_1$heightInches
+# upcoming_dl_1$p_h_diff_z0_FF <-  (upcoming_dl_1$z0_FF_mean * 12)  - upcoming_dl_1$heightInches
+# 
+# upcoming_dl_1$p_h_diff_z0_FT <- (upcoming_dl_1$z0_FT_mean * 12) - upcoming_dl_1$heightInches
+# 
+# upcoming_dl_1$p_h_diff_z0_SI <- (upcoming_dl_1$z0_SI_mean * 12) - upcoming_dl_1$heightInches
+# 
+# upcoming_dl_1$p_h_diff_z0_FC <- (upcoming_dl_1$z0_FC_mean * 12) - upcoming_dl_1$heightInches
+# 
+# upcoming_dl_1$p_h_diff_z0_FS <- (upcoming_dl_1$z0_FS_mean * 12) - upcoming_dl_1$heightInches
+# 
+# colnames(upcoming_dl_1)
 
 # mean release of fastball pitches
 
-upcoming_dl_1$mean_release_fastball <- apply(upcoming_dl_1[, 213:217], 1, mean, na.rm = TRUE)
+# upcoming_dl_1$mean_release_fastball <- apply(upcoming_dl_1[, 213:217], 1, mean, na.rm = TRUE)
 
 # mean velocity of fastball pitches
 
-upcoming_dl_1$mean_velocity_fastball <- apply(upcoming_dl_1[, c(194, 196, 199, 200, 198)], 1, mean, na.rm = TRUE)
+# upcoming_dl_1$mean_velocity_fastball <- apply(upcoming_dl_1[, c(194, 196, 199, 200, 198)], 1, mean, na.rm = TRUE)
 
 # mean whatever x0 is
 
 # 154, 156, 152, 158, 157
 
-upcoming_dl_1$mean_x0_fastball <- apply(upcoming_dl_1[, c(154, 156, 152, 158, 157)], 1, mean, na.rm = TRUE)
+# upcoming_dl_1$mean_x0_fastball <- apply(upcoming_dl_1[, c(154, 156, 152, 158, 157)], 1, mean, na.rm = TRUE)
+# 
+# colnames(upcoming_dl_1)
 
+# for fastball pitches
+
+# upcoming_dl_1$p_h_diff_z0_SL <-  (upcoming_dl_1$z0_SL_mean * 12)  - upcoming_dl_1$heightInches
+# 
+# upcoming_dl_1$p_h_diff_z0_CU <- (upcoming_dl_1$z0_CU_mean * 12) - upcoming_dl_1$heightInches
+# 
+# upcoming_dl_1$p_h_diff_z0_CH <- (upcoming_dl_1$z0_CH_mean * 12) - upcoming_dl_1$heightInches
+# 
+# upcoming_dl_1$p_h_diff_z0_KC <- (upcoming_dl_1$z0_KC_mean * 12) - upcoming_dl_1$heightInches
+# 
+# upcoming_dl_1$p_h_diff_z0_KN <- (upcoming_dl_1$z0_KN_mean * 12) - upcoming_dl_1$heightInches
+# 
+# upcoming_dl_1$mean_release_offspeed <- apply(upcoming_dl_1[, 221:225], 1, mean, na.rm = TRUE)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# ------------------------------
+# Simplified x0 and z0
+# ------------------------------
+
+# I don't include the NA pitches, if you want to, include 150 and 171
+
+# Instead of summarizing, I am just going to use the last game
+
+# x0 mean
+# colnames(upcoming_dl_1)[84:103]
+
+upcoming_dl_1$x0_mean <- apply(upcoming_dl_1[, c(84:103)], 1, mean, na.rm = TRUE)
+
+# z0 mean
+# colnames(upcoming_dl_1)[105:124]
+
+upcoming_dl_1$z0_mean <- apply(upcoming_dl_1[, c(105:124)], 1, mean, na.rm = TRUE)
+
+
+upcoming_dl_1$z0_diff <- (upcoming_dl_1$z0_mean*12) - upcoming_dl_1$heightInches
 
 # ------------------------------
 # Basic tests
@@ -267,9 +325,15 @@ sub_df <- upcoming_dl_1 %>%
 
 # Is there a difference between release points and injury types?
 
-baseball.aov <- aov(mean_release_fastball ~ inj_cat, data = sub_df)
+baseball.aov <- aov(z0_diff ~ inj_cat, data = sub_df)
 
 summary(baseball.aov)
+
+plot(baseball.aov)
+
+tapply(sub_df$z0_diff, list(sub_df$inj_cat), mean, na.rm = TRUE)
+
+ggplot(sub_df, aes(inj_cat, z0_diff)) + geom_boxplot() + coord_flip()
 
 
 # Do low volume pitchers have different injuries than high volume pitchers?
@@ -287,14 +351,16 @@ library(caret)
 
 # 14, 16, 17, 37, 81, 149, 147, 148, 218:220
 
+colnames(upcoming_dl_1)
+
 rf_data <- upcoming_dl_1 %>% 
-  select(c(149, 14, 16, 17, 37, 81, 147, 148, 218:220))
+  select(c(149, 14, 16, 17, 37, 81, 147, 148, 150:151))
+
+nrow(rf_data)
 
 nrow(na.omit(rf_data))
 
 rf_data <- na.omit(rf_data)
-
-nrow(rf_data)
 
 trainids <- createDataPartition(rf_data$inj_cat, p = .75)
 
@@ -307,10 +373,8 @@ baseball.rf.predict <- predict(baseball.rf, rf_data[-trainids$Resample1, ])
 
 table(rf_data$inj_cat[-trainids$Resample1], baseball.rf.predict)
 
-
-
-
-
+plot(upcoming_dl_1$x0_mean, upcoming_dl_1$z0_diff,
+     pch = 16, col = as.numeric(factor(upcoming_dl_1$inj_cat)))
 
 
 # end
