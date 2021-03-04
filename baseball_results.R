@@ -34,7 +34,7 @@ inj.aov <- aov(z0_diff ~ inj_cat, data = inj_subset)
 summary(inj.aov)
 
 # We thought that the relative release point would be a main indicator for pitching injury types but the 
-# initial test did not prove significant so we decided to move onto a more complex model so if other
+# initial test did not prove significant so we decided to move onto a more complex model to see if other
 # variables were able to help with injury prediction
 
 # Multinomial
