@@ -144,7 +144,7 @@ for(i in 1:1000) {
   
   # mix up the injuries
   
-  inj_copy$inj_cat <- sample(inj_copy$inj_cat, length(inj_copy$inj_cat))
+  inj_copy$inj_cat <- sample(as.vector(inj_copy$inj_cat), length(inj_copy$inj_cat), replace = TRUE)
   
   # run the  model
   
@@ -156,6 +156,8 @@ for(i in 1:1000) {
   table(inj_copy$inj_cat[-trainids$Resample1], predict(inj.rand.multi.train, inj_copy[-trainids$Resample1, ]))
   
   multi_means[i] <- mean(inj_copy$inj_cat[-trainids$Resample1] == predict(inj.rand.multi.train, inj_copy[-trainids$Resample1, ]), na.rm = TRUE)
+  
+  inj_copy$inj_cat <- inj_subset$inj_cat
 }
 
 # Our original accuracy was 22% and looking at the histogram of the accuracy for random injuries we do not do any better
@@ -163,6 +165,8 @@ for(i in 1:1000) {
 hist(multi_means, xlab = "Random Injury Accuracy",
      main = "Actual Accuracy Compared to Random Injury Assignment", density = 80)
 abline(v = .22, col = "red", lty = 1, lwd = 3)
+
+pnorm(.22, mean(multi_means), sd(multi_means), lower.tail = FALSE)
 
 # Although our model makes some correct predictions, they are basically just random guesses
 
@@ -201,9 +205,9 @@ tapply(inj_subset$heightInches, list(inj_subset$inj_cat), mean, na.rm = TRUE)
 tapply(inj_subset$ageYrs, list(inj_subset$inj_cat), mean, na.rm = TRUE)
 
 
-
-# Pitcher Release plot (don't worry I will update this with Zes' face)
-
+# -----------------------------------------------------------------
+# Pitcher Release plot, make sure you update your pitcher.png file
+# -----------------------------------------------------------------
 
 # install.packages("jpeg")
 library(jpeg)
@@ -214,39 +218,37 @@ library(png)
 new_df <- inj_subset %>% 
   filter(RHP == 1) %>% 
   filter(inj_cat != "other") %>% 
-  select(x0_mean, z0_mean, inj_cat)
+  select(x0_mean, z0_mean, z0_diff, inj_cat)
 
 
 my_image <- readPNG('pitcher.png')
 
-palette(c('#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99'))
-
+palette(c('#c1003a','#24005c','#648298','#23d464','#28E2E5'))
 
 # Set up a plot area with no plot
-plot(1:2, type='n', xlim = c(-5, 5),
-     ylim = c(0, 7), xlab = "Mound Position", ylab = "Release Height",
-     main = "Pitcher Release Points and Injury Type")
+plot(1:2, type='n', xlim = c(-4, 1.5),
+     ylim = c(-35, 9), xlab = "Average Mound Position", ylab = "Average Relative Release Height",
+     main = "Pitcher Relative Release Points and Injury Type")
 
 # Get the plot information so the image will fill the plot box, and draw it
 lim <- par()
 rasterImage(my_image, 
-            xleft=-2, xright=4, 
-            ybottom=-2, ytop=6.7)
+            xleft=-2, xright=1.5, 
+            ybottom=-60, ytop=2)
 # grid()
 
-points(new_df[, c(1:2)], cex = .7, pch = 16,
+points(new_df[, c(1, 3)], cex = 1.2, pch = 14 + as.numeric(factor(new_df$inj_cat)),
        col = as.numeric(factor(new_df$inj_cat)))
-legend("bottomleft", levels(factor(new_df$inj_cat)),inset = .05,
-       cex = .7, fill = 1:5, border = "white", bty = "n")
-
+legend("bottomleft", levels(factor(new_df$inj_cat)), inset = .00,
+       cex = .7, border = "white", bty = "n",
+       pch = 14 + unique(as.numeric(factor(new_df$inj_cat))),
+       pt.cex = 1.2,
+       col = unique(as.numeric(factor(new_df$inj_cat))))
+box()
 
 # reset your pallete
 
 palette("default")
-
-
-
-
 
 
 # End
